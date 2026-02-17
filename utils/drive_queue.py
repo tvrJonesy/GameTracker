@@ -162,6 +162,21 @@ def get_status(root_folder_id: str, job_id: str) -> Optional[dict]:
     return _read_json(service, jobs_folder, filename)
 
 
+def get_raw_files(root_folder_id: str) -> Optional[list]:
+    """
+    Read the filelist.json written by the Colab watcher.
+    Returns a list of dicts: [{'name': 'cam_a.mp4', 'size_mb': 14200}, ...]
+    or None if Colab hasn't written the list yet.
+    """
+    try:
+        service     = _get_drive_service()
+        jobs_folder = _get_or_create_folder(service, JOBS_FOLDER_NAME, root_folder_id)
+        data        = _read_json(service, jobs_folder, "filelist.json")
+        return data.get("files", []) if data else None
+    except Exception:
+        return None
+
+
 def get_heartbeat(root_folder_id: str) -> Optional[dict]:
     """
     Read the heartbeat file written by the Colab watcher every 30 seconds.
