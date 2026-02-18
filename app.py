@@ -172,7 +172,51 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ── Folder ID check ───────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# OAUTH LOGIN
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Check if we have OAuth token in session state
+if "oauth_token" not in st.session_state:
+    # Check if we're returning from OAuth redirect with a code
+    query_params = st.query_params
+    if "code" in query_params:
+        code = query_params["code"]
+        try:
+            from utils.drive_queue import exchange_code_for_token
+            token_info = exchange_code_for_token(code)
+            st.session_state["oauth_token"] = token_info
+            st.query_params.clear()  # Clear the code from URL
+            st.rerun()
+        except Exception as e:
+            st.error(f"Failed to authenticate: {e}")
+            st.stop()
+    else:
+        # Show login page
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown("### 🔐 Sign in with Google")
+        st.markdown(
+            '<div class="info-box">'
+            'GameTracker needs access to your Google Drive to read video files '
+            'and write processed output. Click below to sign in with your Google account.'
+            '</div>',
+            unsafe_allow_html=True
+        )
+        
+        try:
+            from utils.drive_queue import get_auth_url
+            auth_url = get_auth_url()
+            st.link_button("Sign in with Google →", auth_url, use_container_width=True)
+        except Exception as e:
+            st.error(f"OAuth setup error: {e}")
+            st.info("Make sure you've added OAuth credentials to Streamlit Secrets. "
+                    "See the setup guide for instructions.")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.stop()
+
+# User is authenticated — continue with the app
+
 folder_id = ""
 try:
     folder_id = st.secrets.get("gdrive_folder_id", "")
@@ -293,15 +337,27 @@ col_refresh, col_files_status = st.columns([1, 3])
 with col_refresh:
     if st.button("🔄 Refresh", use_container_width=True):
         with st.spinner("Scanning Drive..."):
+            time.sleep(1)  # Give Colab a moment if it's mid-write
             files = get_raw_files(folder_id)
             st.session_state["_raw_files_cache"] = files
+            if files is None:
+                st.warning("Colab hasn't scanned the folder yet. Make sure Colab is running, wait 30 seconds, then try again.")
+
 with col_files_status:
     if files is None:
         st.markdown(
             '<p style="color:var(--muted);padding-top:0.5rem">'
-            'Click Refresh to scan GameTracker/raw/ for video files</p>',
+            'Colab must be running to scan files. Open Colab, click Run All, '
+            'wait ~30 seconds for the first scan, then click Refresh here.'
+            '</p>',
             unsafe_allow_html=True
         )
+        # Debug: check if Colab has ever written the file
+        if st.session_state.get("_show_debug"):
+            raw_result = get_raw_files(folder_id)
+            st.code(f"get_raw_files() returned: {raw_result}")
+            st.info("If this shows 'None', Colab hasn't written filelist.json yet. "
+                    "Check Colab is running and the watcher cell (Cell 5) is active.")
     elif len(files) == 0:
         st.markdown(
             '<p class="status-warn" style="padding-top:0.5rem">'
@@ -402,7 +458,7 @@ st.markdown('<div class="card">', unsafe_allow_html=True)
 st.markdown("### 🏷️ Player Names")
 st.markdown(
     '<div class="info-box">'
-    'Enter first names for shirt numbers #1–35. Leave blank for any player '
+    'Enter first names for shirt numbers #20–35. Leave blank for any player '
     'not in today\'s squad. OCR reads the shirt number from the video and shows '
     'the name you enter here.'
     '</div>',
@@ -420,7 +476,7 @@ col_home, col_away = st.columns(2)
 with col_home:
     st.markdown(f"**🏠 {home_name or 'Home Team'}**")
     st.markdown('<div class="name-grid">', unsafe_allow_html=True)
-    for num in range(1, 36):
+    for num in range(20, 36):
         col_num, col_input = st.columns([1, 3])
         with col_num:
             st.markdown(f'<span class="name-num">#{num}</span>', unsafe_allow_html=True)
@@ -438,7 +494,7 @@ with col_home:
 with col_away:
     st.markdown(f"**✈️ {away_name or 'Away Team'}**")
     st.markdown('<div class="name-grid">', unsafe_allow_html=True)
-    for num in range(1, 36):
+    for num in range(20, 36):
         col_num, col_input = st.columns([1, 3])
         with col_num:
             st.markdown(f'<span class="name-num">#{num}</span>', unsafe_allow_html=True)
@@ -486,7 +542,7 @@ else:
                         "camera_model": "Generic action camera (auto-calibrate)",
                     },
                     "tracking": {
-                        "shirt_min": 1,
+                        "shirt_min": 20,
                         "shirt_max": 35,
                         "ball_colour": "White (standard)",
                         "kalman_window": 1.5,
