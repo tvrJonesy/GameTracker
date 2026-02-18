@@ -27,7 +27,7 @@ except ImportError:
     GDRIVE_AVAILABLE = False
 
 
-SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 JOBS_FOLDER_NAME = "jobs"
 STATUS_PREFIX    = "status_"
 JOB_PREFIX       = "job_"
