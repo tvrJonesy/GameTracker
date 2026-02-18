@@ -1,15 +1,8 @@
 """
 drive_queue.py — Google Drive job queue for GameTracker
 
-How it works:
-  1. Streamlit writes  GameTracker/jobs/job_<id>.json   (job spec)
-  2. Colab polls that folder every 30 s, picks up new jobs
-  3. Colab writes  GameTracker/jobs/status_<id>.json    (progress)
-  4. Streamlit polls status every 5 s and updates the UI
-
-Authentication uses a Google Service Account JSON key stored in
-Streamlit Community Cloud secrets (st.secrets["gcp_service_account"]).
-The same key is stored in Colab as a mounted secret.
+Authentication: OAuth 2.0 user credentials (acts as the logged-in user)
+No service account, no quota issues.
 """
 
 from __future__ import annotations
@@ -22,9 +15,10 @@ from typing import Optional
 
 import streamlit as st
 
-# ── Optional import — only needed at runtime, not syntax-check time ────────
+# ── Optional import — only needed at runtime ────────────────────────────────
 try:
-    from google.oauth2 import service_account
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import Flow
     from googleapiclient.discovery import build
     from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
     import io
@@ -33,24 +27,67 @@ except ImportError:
     GDRIVE_AVAILABLE = False
 
 
-SCOPES = ["https://www.googleapis.com/auth/drive"]
-JOBS_FOLDER_NAME = "jobs"          # subfolder inside GameTracker/
+SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+JOBS_FOLDER_NAME = "jobs"
 STATUS_PREFIX    = "status_"
 JOB_PREFIX       = "job_"
 
 
-# ── Drive client ────────────────────────────────────────────────────────────
+# ── OAuth authentication ────────────────────────────────────────────────────
+
+def _get_oauth_flow():
+    """Build OAuth flow from Streamlit secrets."""
+    client_config = {
+        "web": {
+            "client_id": st.secrets["oauth"]["client_id"],
+            "client_secret": st.secrets["oauth"]["client_secret"],
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [st.secrets["oauth"]["redirect_uri"]],
+        }
+    }
+    return Flow.from_client_config(client_config, scopes=SCOPES)
+
+
+def get_auth_url() -> str:
+    """Generate the OAuth authorization URL for user login."""
+    flow = _get_oauth_flow()
+    flow.redirect_uri = st.secrets["oauth"]["redirect_uri"]
+    auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
+    return auth_url
+
+
+def exchange_code_for_token(code: str) -> dict:
+    """Exchange authorization code for access token."""
+    flow = _get_oauth_flow()
+    flow.redirect_uri = st.secrets["oauth"]["redirect_uri"]
+    flow.fetch_token(code=code)
+    return {
+        "token": flow.credentials.token,
+        "refresh_token": flow.credentials.refresh_token,
+        "token_uri": flow.credentials.token_uri,
+        "client_id": flow.credentials.client_id,
+        "client_secret": flow.credentials.client_secret,
+        "scopes": flow.credentials.scopes,
+    }
+
 
 def _get_drive_service():
-    """Build and return an authenticated Drive service using st.secrets."""
+    """Build Drive service using stored OAuth credentials from session state."""
     if not GDRIVE_AVAILABLE:
-        raise RuntimeError(
-            "google-api-python-client is not installed. "
-            "Add it to requirements.txt and redeploy."
-        )
-    creds = service_account.Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"],
-        scopes=SCOPES,
+        raise RuntimeError("google-api-python-client not installed")
+    
+    token_info = st.session_state.get("oauth_token")
+    if not token_info:
+        raise RuntimeError("Not authenticated — user needs to sign in with Google")
+    
+    creds = Credentials(
+        token=token_info["token"],
+        refresh_token=token_info.get("refresh_token"),
+        token_uri=token_info["token_uri"],
+        client_id=token_info["client_id"],
+        client_secret=token_info["client_secret"],
+        scopes=token_info["scopes"],
     )
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
