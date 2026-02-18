@@ -298,6 +298,7 @@ if active_job_id:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # ── Colab status ──────────────────────────────────────────────────────────────
+st.session_state["_show_heartbeat_error"] = True  # Enable debug errors
 hb = get_heartbeat(folder_id)
 colab_alive = hb is not None and hb.get("alive", False)
 
