@@ -250,7 +250,11 @@ def get_heartbeat(root_folder_id: str) -> Optional[dict]:
             if age > 90:
                 return {"alive": False, "age_seconds": int(age)}
         return data
-    except Exception:
+    except Exception as e:
+        # Debug: log the error so we can see what's failing
+        import streamlit as st
+        if st.session_state.get("_show_heartbeat_error"):
+            st.error(f"Heartbeat error: {type(e).__name__}: {e}")
         return None
 
 
