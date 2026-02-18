@@ -486,7 +486,7 @@ else:
                         "camera_model": "Generic action camera (auto-calibrate)",
                     },
                     "tracking": {
-                        "shirt_min": 20,
+                        "shirt_min": 1,
                         "shirt_max": 35,
                         "ball_colour": "White (standard)",
                         "kalman_window": 1.5,
