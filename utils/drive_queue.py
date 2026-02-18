@@ -61,7 +61,9 @@ def _get_or_create_folder(service, name: str, parent_id: str) -> str:
         f"name='{name}' and mimeType='application/vnd.google-apps.folder' "
         f"and '{parent_id}' in parents and trashed=false"
     )
-    results = service.files().list(q=q, fields="files(id)").execute()
+    results = service.files().list(
+        q=q, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True
+    ).execute()
     files = results.get("files", [])
     if files:
         return files[0]["id"]
@@ -70,7 +72,9 @@ def _get_or_create_folder(service, name: str, parent_id: str) -> str:
         "mimeType": "application/vnd.google-apps.folder",
         "parents": [parent_id],
     }
-    folder = service.files().create(body=meta, fields="id").execute()
+    folder = service.files().create(
+        body=meta, fields="id", supportsAllDrives=True
+    ).execute()
     return folder["id"]
 
 
@@ -82,16 +86,18 @@ def _write_json(service, folder_id: str, filename: str, data: dict) -> str:
     )
     # Check if file already exists (overwrite)
     q = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
-    existing = service.files().list(q=q, fields="files(id)").execute().get("files", [])
+    existing = service.files().list(
+        q=q, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True
+    ).execute().get("files", [])
     if existing:
         service.files().update(
-            fileId=existing[0]["id"], media_body=media
+            fileId=existing[0]["id"], media_body=media, supportsAllDrives=True
         ).execute()
         return existing[0]["id"]
     else:
         meta = {"name": filename, "parents": [folder_id]}
         f = service.files().create(
-            body=meta, media_body=media, fields="id"
+            body=meta, media_body=media, fields="id", supportsAllDrives=True
         ).execute()
         return f["id"]
 
@@ -99,13 +105,15 @@ def _write_json(service, folder_id: str, filename: str, data: dict) -> str:
 def _read_json(service, folder_id: str, filename: str) -> Optional[dict]:
     """Read a JSON file from a Drive folder. Returns None if not found."""
     q = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
-    results = service.files().list(q=q, fields="files(id)").execute()
+    results = service.files().list(
+        q=q, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True
+    ).execute()
     files = results.get("files", [])
     if not files:
         return None
     buf = io.BytesIO()
     downloader = MediaIoBaseDownload(
-        buf, service.files().get_media(fileId=files[0]["id"])
+        buf, service.files().get_media(fileId=files[0]["id"], supportsAllDrives=True)
     )
     done = False
     while not done:
