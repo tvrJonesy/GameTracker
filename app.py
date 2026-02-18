@@ -217,7 +217,7 @@ if "oauth_token" not in st.session_state:
 
 # User is authenticated — continue with the app
 
-folder_id = "13jA5HZ615DTdDHRxalgYutIIV4YIY-tS"
+folder_id = ""
 try:
     folder_id = st.secrets.get("gdrive_folder_id", "")
 except Exception:
