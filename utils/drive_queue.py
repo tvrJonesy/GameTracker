@@ -141,22 +141,54 @@ def _write_json(service, folder_id: str, filename: str, data: dict) -> str:
 
 def _read_json(service, folder_id: str, filename: str) -> Optional[dict]:
     """Read a JSON file from a Drive folder. Returns None if not found."""
-    q = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
-    results = service.files().list(
-        q=q, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True
-    ).execute()
-    files = results.get("files", [])
-    if not files:
+    import streamlit as st
+    debug = st.session_state.get("_show_heartbeat_error", False)
+    
+    try:
+        if debug:
+            st.info(f"🔍 Looking for {filename} in folder {folder_id}")
+        
+        q = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
+        if debug:
+            st.info(f"🔍 Query: {q}")
+        
+        results = service.files().list(
+            q=q, 
+            fields="files(id, name)", 
+            supportsAllDrives=True, 
+            includeItemsFromAllDrives=True
+        ).execute()
+        
+        files = results.get("files", [])
+        if debug:
+            st.info(f"🔍 Found {len(files)} file(s): {[f.get('name') for f in files]}")
+        
+        if not files:
+            if debug:
+                st.warning(f"⚠️ File '{filename}' not found in folder {folder_id}")
+            return None
+        
+        if debug:
+            st.info(f"🔍 Downloading file ID: {files[0]['id']}")
+        
+        buf = io.BytesIO()
+        downloader = MediaIoBaseDownload(
+            buf, service.files().get_media(fileId=files[0]["id"], supportsAllDrives=True)
+        )
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+        buf.seek(0)
+        data = json.loads(buf.read().decode("utf-8"))
+        
+        if debug:
+            st.success(f"✓ Successfully read {filename}")
+        
+        return data
+    except Exception as e:
+        if debug:
+            st.error(f"❌ Error reading {filename}: {type(e).__name__}: {e}")
         return None
-    buf = io.BytesIO()
-    downloader = MediaIoBaseDownload(
-        buf, service.files().get_media(fileId=files[0]["id"], supportsAllDrives=True)
-    )
-    done = False
-    while not done:
-        _, done = downloader.next_chunk()
-    buf.seek(0)
-    return json.loads(buf.read().decode("utf-8"))
 
 
 # ── Public API ──────────────────────────────────────────────────────────────
