@@ -402,7 +402,7 @@ st.markdown('<div class="card">', unsafe_allow_html=True)
 st.markdown("### 🏷️ Player Names")
 st.markdown(
     '<div class="info-box">'
-    'Enter first names for shirt numbers #20–35. Leave blank for any player '
+    'Enter first names for shirt numbers #1–35. Leave blank for any player '
     'not in today\'s squad. OCR reads the shirt number from the video and shows '
     'the name you enter here.'
     '</div>',
@@ -420,7 +420,7 @@ col_home, col_away = st.columns(2)
 with col_home:
     st.markdown(f"**🏠 {home_name or 'Home Team'}**")
     st.markdown('<div class="name-grid">', unsafe_allow_html=True)
-    for num in range(20, 36):
+    for num in range(1, 36):
         col_num, col_input = st.columns([1, 3])
         with col_num:
             st.markdown(f'<span class="name-num">#{num}</span>', unsafe_allow_html=True)
@@ -438,7 +438,7 @@ with col_home:
 with col_away:
     st.markdown(f"**✈️ {away_name or 'Away Team'}**")
     st.markdown('<div class="name-grid">', unsafe_allow_html=True)
-    for num in range(20, 36):
+    for num in range(1, 36):
         col_num, col_input = st.columns([1, 3])
         with col_num:
             st.markdown(f'<span class="name-num">#{num}</span>', unsafe_allow_html=True)
