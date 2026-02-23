@@ -535,8 +535,8 @@ else:
                     },
                     "stitch": {
                         "seam_auto": True,
-                        "overlap_pct": 18,
-                        "lens_correct": True,
+                        "overlap_pct": 25,
+                        "lens_correct": False,
                         "colour_match": True,
                         "stabilise": True,
                         "preview_stitch": False,
