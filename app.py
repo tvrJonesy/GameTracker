@@ -395,7 +395,7 @@ if files and len(files) > 0:
             "Camera A",
             options=options,
             key="cam_a_select",
-            label_visibility="collapsed",
+            label_visibility="colsed",
         )
         if sel_a != "— select —":
             st.session_state["cam_a_filename"] = label_to_name[sel_a]
@@ -409,7 +409,7 @@ if files and len(files) > 0:
             "Camera B",
             options=options,
             key="cam_b_select",
-            label_visibility="collapsed",
+            label_visibility="colsed",
         )
         if sel_b != "— select —":
             st.session_state["cam_b_filename"] = label_to_name[sel_b]
@@ -438,7 +438,7 @@ with col_hc:
         options=list(KIT_COLOURS.keys()),
         index=0,
         key="home_colour_name",
-        label_visibility="collapsed",
+        label_visibility="colsed",
     )
     st.session_state["home_colour"] = KIT_COLOURS[home_colour_name]
 with col_ac:
@@ -448,7 +448,7 @@ with col_ac:
         options=list(KIT_COLOURS.keys()),
         index=1,
         key="away_colour_name",
-        label_visibility="collapsed",
+        label_visibility="colsed",
     )
     st.session_state["away_colour"] = KIT_COLOURS[away_colour_name]
 
@@ -487,7 +487,7 @@ with col_home:
                 value=st.session_state["squad_home"].get(num, ""),
                 placeholder="Name",
                 key=f"home_{num}",
-                label_visibility="collapsed",
+                label_visibility="colsed",
             )
             st.session_state["squad_home"][num] = val.strip().upper() if val else ""
     st.markdown('</div>', unsafe_allow_html=True)
@@ -505,7 +505,7 @@ with col_away:
                 value=st.session_state["squad_away"].get(num, ""),
                 placeholder="Name",
                 key=f"away_{num}",
-                label_visibility="collapsed",
+                label_visibility="colsed",
             )
             st.session_state["squad_away"][num] = val.strip().upper() if val else ""
     st.markdown('</div>', unsafe_allow_html=True)
@@ -535,7 +535,7 @@ else:
                     },
                     "stitch": {
                         "seam_auto": True,
-                        "overlap_pct": 35,
+                        "overlap_pct": 30,
                         "lens_correct": False,
                         "colour_match": True,
                         "stabilise": True,
