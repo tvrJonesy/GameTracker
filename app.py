@@ -395,7 +395,7 @@ if files and len(files) > 0:
             "Camera A",
             options=options,
             key="cam_a_select",
-            label_visibility="colsed",
+            label_visibility="collapsed",
         )
         if sel_a != "— select —":
             st.session_state["cam_a_filename"] = label_to_name[sel_a]
@@ -409,7 +409,7 @@ if files and len(files) > 0:
             "Camera B",
             options=options,
             key="cam_b_select",
-            label_visibility="colsed",
+            label_visibility="collapsed",
         )
         if sel_b != "— select —":
             st.session_state["cam_b_filename"] = label_to_name[sel_b]
@@ -438,7 +438,7 @@ with col_hc:
         options=list(KIT_COLOURS.keys()),
         index=0,
         key="home_colour_name",
-        label_visibility="colsed",
+        label_visibility="collapsed",
     )
     st.session_state["home_colour"] = KIT_COLOURS[home_colour_name]
 with col_ac:
@@ -448,7 +448,7 @@ with col_ac:
         options=list(KIT_COLOURS.keys()),
         index=1,
         key="away_colour_name",
-        label_visibility="colsed",
+        label_visibility="collapsed",
     )
     st.session_state["away_colour"] = KIT_COLOURS[away_colour_name]
 
@@ -459,7 +459,7 @@ st.markdown('<div class="card">', unsafe_allow_html=True)
 st.markdown("### 🏷️ Player Names")
 st.markdown(
     '<div class="info-box">'
-    'Enter first names for shirt numbers #20–35. Leave blank for any player '
+    'Enter first names for shirt numbers #1–35. Leave blank for any player '
     'not in today\'s squad. OCR reads the shirt number from the video and shows '
     'the name you enter here.'
     '</div>',
@@ -477,7 +477,7 @@ col_home, col_away = st.columns(2)
 with col_home:
     st.markdown(f"**🏠 {home_name or 'Home Team'}**")
     st.markdown('<div class="name-grid">', unsafe_allow_html=True)
-    for num in range(20, 36):
+    for num in range(1, 36):
         col_num, col_input = st.columns([1, 3])
         with col_num:
             st.markdown(f'<span class="name-num">#{num}</span>', unsafe_allow_html=True)
@@ -487,7 +487,7 @@ with col_home:
                 value=st.session_state["squad_home"].get(num, ""),
                 placeholder="Name",
                 key=f"home_{num}",
-                label_visibility="colsed",
+                label_visibility="collapsed",
             )
             st.session_state["squad_home"][num] = val.strip().upper() if val else ""
     st.markdown('</div>', unsafe_allow_html=True)
@@ -495,7 +495,7 @@ with col_home:
 with col_away:
     st.markdown(f"**✈️ {away_name or 'Away Team'}**")
     st.markdown('<div class="name-grid">', unsafe_allow_html=True)
-    for num in range(20, 36):
+    for num in range(1, 36):
         col_num, col_input = st.columns([1, 3])
         with col_num:
             st.markdown(f'<span class="name-num">#{num}</span>', unsafe_allow_html=True)
@@ -505,7 +505,7 @@ with col_away:
                 value=st.session_state["squad_away"].get(num, ""),
                 placeholder="Name",
                 key=f"away_{num}",
-                label_visibility="colsed",
+                label_visibility="collapsed",
             )
             st.session_state["squad_away"][num] = val.strip().upper() if val else ""
     st.markdown('</div>', unsafe_allow_html=True)
@@ -535,15 +535,15 @@ else:
                     },
                     "stitch": {
                         "seam_auto": True,
-                        "overlap_pct": 30,
-                        "lens_correct": False,
+                        "overlap_pct": 25,
+                        "lens_correct": True,
                         "colour_match": True,
                         "stabilise": True,
                         "preview_stitch": False,
                         "camera_model": "Generic action camera (auto-calibrate)",
                     },
                     "tracking": {
-                        "shirt_min": 20,
+                        "shirt_min": 1,
                         "shirt_max": 35,
                         "ball_colour": "White (standard)",
                         "kalman_window": 1.5,
